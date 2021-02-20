@@ -77,6 +77,13 @@ int main(int argc, char* argv[]) {
   const size_t count = world.count_entities<pickable, graphics>();
   assert(count == 2);
   
+  // forward iterators
+  for (auto itr = world.get_entities_view<pickable, graphics>().begin(); itr != world.get_entities_view<pickable, graphics>().end(); ++itr) {
+    const auto &ent = *itr;
+    auto h = ent.get<pickable>();
+    assert(h.valid());
+  }
+  
   size_t counter = 0;
   for (const auto &ent : world.get_entities_view<pickable, graphics>()) {
     auto h = ent.get<pickable>();
@@ -90,12 +97,6 @@ int main(int argc, char* argv[]) {
   // is reference to component is better than component handle?
   for (const auto &comp : world.get_component_view<pickable>()) {
     (void)comp;
-  }
-  
-  for (auto itr = world.get_entities_view<pickable, graphics>().begin(); itr != world.get_entities_view<pickable, graphics>().end(); ++itr) {
-    const auto &ent = *itr;
-    auto h = ent.get<pickable>();
-    assert(h.valid());
   }
   
   assert(ent->get<abc::transform>().valid());
@@ -115,6 +116,7 @@ int main(int argc, char* argv[]) {
   
   world.destroy_entity(ent);
   
+  // bonus content
 #if __cplusplus >= 201703L
   const auto fine_str = replace(yacs::get_type_name<abc::transform>(), "::", "_");
   std::cout << "transform name " << fine_str << "\n";

@@ -46,9 +46,6 @@ namespace yacs {
     template <typename T>
     bool remove();
 
-    template <typename T>
-    bool has() const;
-
     template <typename ...Types>
     bool has() const;
 
@@ -58,9 +55,15 @@ namespace yacs {
     template <typename T>
     const_component_handle<T> get() const;
     
+    template <typename T>
+    bool set(component_handle<T> handle);
+    
+    template <typename T>
+    bool unset();
+    
     void* raw_get(const size_t &component_type) const;
 
-    size_t id() const;
+    size_t id() const; // bad design and useless
     size_t components_count() const;
   private:
     size_t m_id;
@@ -371,14 +374,9 @@ namespace yacs {
     return true;
   }
 
-  template <typename T>
-  bool entity::has() const {
-    return get_component(get_type_id<T>()) != nullptr;
-  }
-
   template <typename ...Types>
   bool entity::has() const {
-    const std::initializer_list<size_t> list = {component_storage<Types>::type_id...};
+    const std::initializer_list<size_t> list = {get_type_id<Types>()...};
     return has(list);
   }
 
@@ -394,6 +392,23 @@ namespace yacs {
     auto comp = get_component(get_type_id<T>());
     const auto* ptr = reinterpret_cast<const component_storage<T>*>(comp);
     return const_component_handle<T>(ptr->ptr());
+  }
+  
+  template <typename T>
+  bool entity::set(component_handle<T> handle) {
+    if (has<T>()) return false;
+    if (get_type_id<T>() == SIZE_MAX) return false;
+    
+    set_component(get_type_id<T>(), handle.get());
+    return true;
+  }
+  
+  template <typename T>
+  bool entity::unset() {
+    if (!has<T>()) return false;
+    
+    remove_component(get_type_id<T>());
+    return true;
   }
   
   template <typename T>
@@ -606,6 +621,10 @@ namespace yacs {
 
     return true;
   }
+  
+  void* entity::raw_get(const size_t &component_type) const {
+    return get_component(component_type);
+  }
 
   size_t entity::id() const { return m_id; }
   size_t entity::components_count() const { 
@@ -639,6 +658,8 @@ namespace yacs {
   }
   
   void entity::remove_component(const size_t &type) {
+    if (type == SIZE_MAX) return;
+    
     const size_t container_id    = type / static_container_size;
     const size_t container_index = type % static_container_size;
     
@@ -648,6 +669,8 @@ namespace yacs {
   }
   
   void* entity::get_component(const size_t &type) const {
+    if (type == SIZE_MAX) return nullptr;
+    
     const size_t container_id    = type / static_container_size;
     const size_t container_index = type % static_container_size;
     
