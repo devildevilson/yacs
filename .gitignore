@@ -1,0 +1,14 @@
+.kde4/*
+*.kdev4
+.old/
+build/
+libs/
+include_old/
+*.gch
+*/*.gch
+*.kate-swp
+*/*.kate-swp
+CMakeLists.txt.user
+cmake-build-debug/
+.idea
+exclude/
