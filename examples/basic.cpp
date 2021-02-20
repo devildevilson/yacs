@@ -9,6 +9,10 @@
 namespace abc {
   struct transform {
     float x, y, z;
+    
+    ~transform() {
+      std::cout << "transform destroyed" << "\n";
+    }
   };
 }
 
@@ -52,13 +56,18 @@ int main(int argc, char* argv[]) {
   
   world.create_allocator<graphics>(sizeof(graphics)*100);
   assert(yacs::get_type_id<graphics>() == 0);
+  assert(yacs::get_type_id<abc::transform>() == SIZE_MAX);
   
   world.subscribe(&ev);
   
   auto ent = world.create_entity();
-  ent->add<abc::transform>();
-  ent->add<pickable>();
-  ent->add<graphics>();
+  auto trans_h = ent->add<abc::transform>();
+  auto pickable_h = ent->add<pickable>();
+  auto graphics_h = ent->add<graphics>();
+  
+  trans_h->x = 234.0f;
+  pickable_h->attribute1 = 235;
+  graphics_h->image_id1 = 74574;
   
   auto ent2 = world.create_entity();
   ent2->add<abc::transform>();
@@ -78,9 +87,9 @@ int main(int argc, char* argv[]) {
   
   assert(counter == 2);
   
+  // is reference to component is better than component handle?
   for (const auto &comp : world.get_component_view<pickable>()) {
     (void)comp;
-    // нужно ли компоненты по референсу здесь выдавать?
   }
   
   for (auto itr = world.get_entities_view<pickable, graphics>().begin(); itr != world.get_entities_view<pickable, graphics>().end(); ++itr) {
@@ -90,8 +99,11 @@ int main(int argc, char* argv[]) {
   }
   
   assert(ent->get<abc::transform>().valid());
+  assert(ent->get<abc::transform>()->x == 234.0f);
   assert(ent->get<pickable>().valid());
+  assert(ent->get<pickable>()->attribute1 == 235);
   assert(ent->get<graphics>().valid());
+  assert(ent->get<graphics>()->image_id1 == 74574);
   
   ent->remove<abc::transform>();
   ent->remove<pickable>();
@@ -107,6 +119,8 @@ int main(int argc, char* argv[]) {
   const auto fine_str = replace(yacs::get_type_name<abc::transform>(), "::", "_");
   std::cout << "transform name " << fine_str << "\n";
 #endif
+  
+  // autorelease all entites on world destruction 
 
   return 0;
 }

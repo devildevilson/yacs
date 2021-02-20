@@ -120,8 +120,13 @@ namespace yacs {
   }
 
   template <typename T, class seperator_mark = int>
-  std::string get_type_name() {
+  inline std::string internal_get_type_name() {
     return ctti_get_type_name_from_sig(__PRETTY_FUNCTION__);
+  }
+  
+  template <typename T>
+  std::string get_type_name() {
+    return internal_get_type_name<T>();
   }
 
 #elif defined(_MSC_VER)
