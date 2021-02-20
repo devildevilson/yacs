@@ -1,6 +1,8 @@
 # Yet another component system
 Header-only c++11 entity component system   
 
+Depends on [Parallel hashmap](https://github.com/greg7mdp/parallel-hashmap) for fast pointer container
+
 Compile time type name as bonus for using c++17  
   
 Example:  

@@ -262,7 +262,6 @@ namespace yacs {
     world();
     ~world();
 
-    // нужно добавить размер инициализируемого массива
     entity* create_entity();
     void destroy_entity(entity* ent);
 
@@ -299,9 +298,7 @@ namespace yacs {
     template <typename ...Types>
     size_t count_entities() const;
     
-    // ха, а теперь по индексу не получить компонент
-    // а значит трудности с распределением задач в мультитрединге
-    // с другой стороны нам нужно только продвинуть итератор
+    // is there any chance to get component or entity using index for O(1) time?
 //     template <typename T>
 //     component_handle<T> get_component(const size_t &index);
 //     entity* get_entity(const size_t &index);
@@ -475,8 +472,6 @@ namespace yacs {
     });
   }
 
-  // в многопоточной версии нужно убедиться что components не используется во время того как мы добавляем
-  // созданный компонент, это можно гарантировать создав пул для каждого ThreadsafeArray
   template <typename T, typename ...Args>
   component_handle<T> world::create_component(Args&& ...args) {
     if (get_type_id<T>() >= m_components_data.size()) {
@@ -559,15 +554,6 @@ namespace yacs {
     return world::entities_view<Args...>(this);
   }
 
-//   template <typename T>
-//   component_handle<T> world::get_component(const size_t &index) {
-//     if (component_storage<T>::type >= components_data.size()) return component_handle<T>(nullptr);
-//     const size_t poolIndex = component_storage<T>::type;
-//     if (index >= components_data[poolIndex].components.size()) return component_handle<T>(nullptr);
-//     auto storage = reinterpret_cast<component_storage<T>*>(components_data[poolIndex].components[index]);
-//     return component_handle<T>(storage->ptr());
-//   }
-
   template <typename T, typename ...Args>
   component_handle<T> world::components_data::create(Args&& ...args) {
     auto ptr = pool.create<component_storage<T>>(std::forward<Args>(args)...);
@@ -575,7 +561,6 @@ namespace yacs {
     return component_handle<T>(ptr->ptr());
   }
 
-  // удаление в этом случае к сожалению будет O(n)
   template <typename T>
   void world::components_data::destroy(component_handle<T> handle) {
     auto ptr = reinterpret_cast<void*>(handle.get());
@@ -584,7 +569,7 @@ namespace yacs {
   }
 }
 
-#endif //YACS_H
+#endif // YACS_H
 
 #ifdef YACS_IMPLEMENTATION
 namespace yacs {
@@ -690,12 +675,6 @@ namespace yacs {
     for (auto entity : m_entities) {
       m_entity_pool.destroy<class entity>(entity);
     }
-
-//     for (size_t i = 0; i < components_data.size(); ++i) {
-//       for (auto & comp : components_data[i].components) {
-//         componentsPool[i].destroy(i, comp);
-//       }
-//     }
   }
 
   entity* world::create_entity() {
@@ -735,12 +714,6 @@ namespace yacs {
     return m_entities.size();
   }
 
-  // на что бы заменить
-//   entity* world::get_entity(const size_t &index) {
-//     if (index >= entities.size()) return nullptr;
-//     return entities[index];
-//   }
-
   world::components_data::components_data(const size_t &type_size, const size_t &type_alignment, const size_t &size, const std::function<void(void*, typeless_pool&)> &destructor) : 
     pool(type_size, type_alignment, size), 
     destructor(destructor) 
@@ -765,5 +738,5 @@ namespace yacs {
     m_entity_component_containers.destroy(cont);
   }
 }
-#endif
+#endif // YACS_IMPLEMENTATION
 
