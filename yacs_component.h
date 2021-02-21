@@ -5,9 +5,9 @@
 
 #ifndef _NDEBUG
 #include <cassert>
-#define ASSERT(expr) assert(expr)
+#define YACS_ASSERT(expr) assert(expr)
 #else
-#define ASSERT(expr)
+#define YACS_ASSERT(expr)
 #endif
 
 namespace yacs {
@@ -25,6 +25,8 @@ namespace yacs {
   template <typename T>
   struct event_container {
     static size_t type_id;
+    
+    // not used
     T data;
     
     template <typename... Args>

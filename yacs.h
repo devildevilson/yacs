@@ -349,8 +349,8 @@ namespace yacs {
     }
 
     component_handle<T> handle = m_world->create_component<T>(std::forward<Args>(args)...);
-    ASSERT(get_type_id<T>() != SIZE_MAX);
-    ASSERT(handle.valid());
+    YACS_ASSERT(get_type_id<T>() != SIZE_MAX);
+    YACS_ASSERT(handle.valid());
     set_component(get_type_id<T>(), handle.get());
     m_world->emit(component_created<T>{this, handle});
 
@@ -476,7 +476,7 @@ namespace yacs {
   component_handle<T> world::create_component(Args&& ...args) {
     if (get_type_id<T>() >= m_components_data.size()) {
       create_allocator<T>(YACS_DEFAULT_COMPONENTS_COUNT * sizeof(T));
-      ASSERT(component_storage<T>::type_id < m_components_data.size());
+      YACS_ASSERT(component_storage<T>::type_id < m_components_data.size());
     }
     
     const size_t poolIndex = get_type_id<T>();
@@ -564,7 +564,9 @@ namespace yacs {
   template <typename T>
   void world::components_data::destroy(component_handle<T> handle) {
     auto ptr = reinterpret_cast<void*>(handle.get());
-    components.erase(ptr);
+    auto itr = components.find(ptr);
+    if (itr == components.end()) return;
+    components._erase(itr);
     destructor(ptr, pool);
   }
 }
@@ -628,7 +630,7 @@ namespace yacs {
   }
   
   void entity::set_component(const size_t &type, void* comp) {
-    ASSERT(type != SIZE_MAX);
+    YACS_ASSERT(type != SIZE_MAX);
     
     const size_t container_id    = type / static_container_size;
     const size_t container_index = type % static_container_size;
@@ -726,7 +728,9 @@ namespace yacs {
   }
 
   void world::components_data::destroy(void* storage) {
-    components.erase(storage);
+    auto itr = components.find(storage);
+    if (itr == components.end()) return;
+    components._erase(itr);
     destructor(storage, pool);
   }
 

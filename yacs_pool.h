@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <algorithm>
 #include <array>
-#include <cassert>
 
 #include "yacs_component.h"
 
@@ -56,7 +55,7 @@ namespace yacs {
       memory(nullptr), 
       free_slots(nullptr) 
     {
-      ASSERT(type_size >= sizeof(char*));
+      YACS_ASSERT(type_size >= sizeof(char*));
       allocate_block();
     }
 
@@ -79,8 +78,8 @@ namespace yacs {
 
     template<typename T, typename... Args>
     T* create(Args&&... args) {
-      ASSERT(sizeof(T) == type_size);
-      ASSERT(alignof(T) == type_aligment);
+      YACS_ASSERT(sizeof(T) == type_size);
+      YACS_ASSERT(alignof(T) == type_aligment);
 
       auto ptr = allocate();
       auto valid_ptr = new (ptr) T(std::forward<Args>(args)...);
@@ -90,8 +89,8 @@ namespace yacs {
     template<typename T>
     void destroy(T* ptr) {
       if (ptr == nullptr) return;
-      ASSERT(sizeof(T) == type_size);
-      ASSERT(alignof(T) == type_aligment);
+      YACS_ASSERT(sizeof(T) == type_size);
+      YACS_ASSERT(alignof(T) == type_aligment);
 
       ptr->~T();
 
